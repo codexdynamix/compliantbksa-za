@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import zlib from "node:zlib";
 
 const ROUTES = [
   "/",
@@ -197,10 +198,107 @@ async function run() {
     fs.writeFileSync(path.join(DIST_DIR, ".htaccess"), htaccessContent, "utf8");
     console.log("[export] Generated: dist/.htaccess");
 
+    // Also generate dist.zip for direct upload via Hostinger File Manager
+    createDistZip(DIST_DIR, path.join(ROOT_DIR, "dist.zip"));
+    console.log("[export] Generated: dist.zip (ready for 1-click Hostinger File Manager upload)");
+
     console.log("[export] SUCCESS! Production static build is ready in ./dist for Hostinger public_html.");
   } finally {
     stopServer();
   }
+}
+
+function createDistZip(sourceDir, outPath) {
+  const files = [];
+  function walk(dir, rel) {
+    for (const file of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, file.name);
+      const r = rel ? rel + "/" + file.name : file.name;
+      if (file.isDirectory()) walk(full, r);
+      else files.push({ full, r });
+    }
+  }
+  walk(sourceDir, "");
+
+  const parts = [];
+  const central = [];
+  let offset = 0;
+
+  for (const f of files) {
+    const data = fs.readFileSync(f.full);
+    const compressed = zlib.deflateRawSync(data);
+    const isDeflated = compressed.length < data.length;
+    const compData = isDeflated ? compressed : data;
+    const method = isDeflated ? 8 : 0;
+    const crc = calcCrc32(data);
+
+    const nameBuf = Buffer.from(f.r, "utf8");
+    const localHeader = Buffer.alloc(30 + nameBuf.length);
+    localHeader.writeUInt32LE(0x04034b50, 0);
+    localHeader.writeUInt16LE(20, 4);
+    localHeader.writeUInt16LE(0, 6);
+    localHeader.writeUInt16LE(method, 8);
+    localHeader.writeUInt16LE(0, 10);
+    localHeader.writeUInt16LE(0, 12);
+    localHeader.writeUInt32LE(crc, 14);
+    localHeader.writeUInt32LE(compData.length, 18);
+    localHeader.writeUInt32LE(data.length, 22);
+    localHeader.writeUInt16LE(nameBuf.length, 26);
+    localHeader.writeUInt16LE(0, 28);
+    nameBuf.copy(localHeader, 30);
+
+    parts.push(localHeader);
+    parts.push(compData);
+
+    const cdHeader = Buffer.alloc(46 + nameBuf.length);
+    cdHeader.writeUInt32LE(0x02014b50, 0);
+    cdHeader.writeUInt16LE(20, 4);
+    cdHeader.writeUInt16LE(20, 6);
+    cdHeader.writeUInt16LE(0, 8);
+    cdHeader.writeUInt16LE(method, 10);
+    cdHeader.writeUInt16LE(0, 12);
+    cdHeader.writeUInt16LE(0, 14);
+    cdHeader.writeUInt32LE(crc, 16);
+    cdHeader.writeUInt32LE(compData.length, 20);
+    cdHeader.writeUInt32LE(data.length, 24);
+    cdHeader.writeUInt16LE(nameBuf.length, 28);
+    cdHeader.writeUInt16LE(0, 30);
+    cdHeader.writeUInt16LE(0, 32);
+    cdHeader.writeUInt16LE(0, 34);
+    cdHeader.writeUInt32LE(0, 36);
+    cdHeader.writeUInt32LE(offset, 42);
+    nameBuf.copy(cdHeader, 46);
+
+    central.push(cdHeader);
+    offset += localHeader.length + compData.length;
+  }
+
+  const centralOffset = offset;
+  const centralSize = central.reduce((acc, b) => acc + b.length, 0);
+
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(0, 4);
+  eocd.writeUInt16LE(0, 6);
+  eocd.writeUInt16LE(files.length, 8);
+  eocd.writeUInt16LE(files.length, 10);
+  eocd.writeUInt32LE(centralSize, 12);
+  eocd.writeUInt32LE(centralOffset, 16);
+  eocd.writeUInt16LE(0, 20);
+
+  const finalZip = Buffer.concat([...parts, ...central, eocd]);
+  fs.writeFileSync(outPath, finalZip);
+}
+
+function calcCrc32(buf) {
+  let crc = ~0;
+  for (let i = 0; i < buf.length; i++) {
+    crc ^= buf[i];
+    for (let j = 0; j < 8; j++) {
+      crc = (crc >>> 1) ^ (-(crc & 1) & 0xEDB88320);
+    }
+  }
+  return (crc ^ ~0) >>> 0;
 }
 
 run().catch((err) => {
