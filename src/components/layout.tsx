@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ArrowUpRight, Menu, X } from "lucide-react";
-import { GmailAppIcon, MapsAppIcon, WhatsAppAppIcon, WhatsAppGlyph } from "@/components/brand-icons";
+import { ArrowDown, Menu, X } from "lucide-react";
+import { GmailAppIcon, MapsAppIcon, WhatsAppBadge, WhatsAppGlyph } from "@/components/brand-icons";
+import { scrollToContactForm } from "@/lib/scroll";
 import { SITE, navigation } from "@/lib/site";
 
 function Wordmark({ footer = false }: { footer?: boolean }) {
@@ -18,38 +19,70 @@ function Wordmark({ footer = false }: { footer?: boolean }) {
 
 function useReveals(pathname: string) {
   useEffect(() => {
-    const items = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
-    if (!items.length) return;
     const show = (item: HTMLElement) => item.classList.add("is-visible");
-    const revealInView = () => {
-      const threshold = window.innerHeight * 1.12;
-      items.forEach((item) => {
-        if (item.getBoundingClientRect().top <= threshold) show(item);
-      });
+    const revealAll = () => {
+      document.querySelectorAll<HTMLElement>("[data-reveal]").forEach(show);
     };
-    if (!("IntersectionObserver" in window)) {
-      items.forEach(show);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            show(entry.target as HTMLElement);
-            observer.unobserve(entry.target);
+
+    let observer: IntersectionObserver | null = null;
+    let timer: number | null = null;
+
+    const runReveal = () => {
+      const items = Array.from(document.querySelectorAll<HTMLElement>("[data-reveal]"));
+      if (!items.length) return;
+
+      const revealInView = () => {
+        const threshold = window.innerHeight * 1.25;
+        items.forEach((item) => {
+          const rect = item.getBoundingClientRect();
+          if (rect.top <= threshold && rect.bottom >= -100) {
+            show(item);
           }
-        }),
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.12 },
-    );
-    items.forEach((item) => observer.observe(item));
-    const frame = window.requestAnimationFrame(revealInView);
-    window.addEventListener("scroll", revealInView, { passive: true });
-    window.addEventListener("resize", revealInView);
+        });
+      };
+
+      revealInView();
+
+      if (!("IntersectionObserver" in window)) {
+        revealAll();
+        return;
+      }
+
+      if (observer) observer.disconnect();
+      observer = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              show(entry.target as HTMLElement);
+              observer?.unobserve(entry.target);
+            }
+          }),
+        { rootMargin: "60px 0px 60px 0px", threshold: 0.01 },
+      );
+
+      items.forEach((item) => {
+        if (!item.classList.contains("is-visible")) {
+          observer?.observe(item);
+        }
+      });
+
+      // Safety timeout to ensure content is never stuck invisible
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(revealAll, 350);
+
+      window.addEventListener("scroll", revealInView, { passive: true });
+      window.addEventListener("resize", revealInView);
+    };
+
+    runReveal();
+    const rafId = window.requestAnimationFrame(() => {
+      runReveal();
+    });
+
     return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", revealInView);
-      window.removeEventListener("resize", revealInView);
-      observer.disconnect();
+      if (timer) window.clearTimeout(timer);
+      window.cancelAnimationFrame(rafId);
+      observer?.disconnect();
     };
   }, [pathname]);
 }
@@ -84,9 +117,17 @@ function Header() {
               {item.label}
             </Link>
           ))}
-          <Link to="/contact" className="nav-cta">
-            Book a consultation <ArrowUpRight aria-hidden="true" />
-          </Link>
+          <a
+            href="#contact"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToContactForm();
+            }}
+            className="nav-cta"
+            aria-label="Book now — scroll down to consultation form"
+          >
+            Book now <ArrowDown aria-hidden="true" />
+          </a>
         </div>
         <button
           type="button"
@@ -103,13 +144,21 @@ function Header() {
           {navigation.map((item) => (
             <Link key={item.to} to={item.to} onClick={() => setMenuOpen(false)} className="mobile-nav-link">
               <span>{item.label}</span>
-              <ArrowUpRight aria-hidden="true" />
+              <ArrowDown aria-hidden="true" />
             </Link>
           ))}
-          <Link to="/contact" onClick={() => setMenuOpen(false)} className="mobile-nav-link">
-            <span>Book a consultation</span>
-            <ArrowUpRight aria-hidden="true" />
-          </Link>
+          <a
+            href="#contact"
+            onClick={(e) => {
+              e.preventDefault();
+              setMenuOpen(false);
+              scrollToContactForm();
+            }}
+            className="mobile-nav-link"
+          >
+            <span>Book now</span>
+            <ArrowDown aria-hidden="true" />
+          </a>
         </div>
       ) : null}
     </header>
@@ -124,11 +173,14 @@ function Footer() {
           <Wordmark footer />
         </Link>
         <div className="footer-links">
-          {navigation.slice(1).map((item) => (
+          {navigation.map((item) => (
             <Link key={item.to} to={item.to}>
               {item.label}
             </Link>
           ))}
+          <Link to="/approach">Approach</Link>
+          <Link to="/who-we-help">Who we help</Link>
+          <Link to="/faq">FAQ</Link>
         </div>
         <div className="footer-meta">
           <span>Cape Town · Ceres · South Africa</span>
@@ -166,13 +218,16 @@ function WhatsAppDock() {
       {preview ? (
         <div className="wa-preview" role="dialog" aria-label="WhatsApp message">
           <div className="wa-preview-head">
-            <WhatsAppAppIcon size={36} />
+            <WhatsAppBadge size={34} />
             <span>
               <strong>Compliant Bookkeeping SA</strong>
-              <span>Usually replies in a few minutes</span>
+              <span className="wa-status-text">
+                <span className="wa-status-dot" aria-hidden="true" />
+                Usually replies in a few minutes
+              </span>
             </span>
           </div>
-          <p>Need the books in order? Message us on WhatsApp — no hard sell, just a practical next step.</p>
+          <p>Need the books in order? Message us on WhatsApp.</p>
           <div className="wa-preview-actions">
             <a className="wa-preview-open" href={SITE.whatsappHref} target="_blank" rel="noreferrer">
               <WhatsAppGlyph /> Open WhatsApp
@@ -238,7 +293,15 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   useReveals(pathname);
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "auto" });
+    if (
+      window.location.hash === "#contact" ||
+      window.location.hash === "#form" ||
+      window.location.hash === "#consultation-form"
+    ) {
+      setTimeout(scrollToContactForm, 150);
+    } else {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
   }, [pathname]);
 
   return (

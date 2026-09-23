@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { ContactSection, InteriorHero } from "@/components/sections";
 import { Eyebrow } from "@/components/layout";
+import { scrollToContactForm } from "@/lib/scroll";
 import { agriculturalServices } from "@/lib/site";
 
 export const Route = createFileRoute("/agricultural-accounting")({ component: AgriculturalPage });
@@ -61,9 +62,16 @@ function AgriculturalPage() {
           <Eyebrow>Farm packages</Eyebrow>
           <h2>Farm accounting packages from R1,500 per month</h2>
           <p>Pricing is based on farm size, transaction volume, payroll and services required.</p>
-          <Link to="/contact" className="text-link">
+          <a
+            href="#contact"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToContactForm();
+            }}
+            className="text-link"
+          >
             Agricultural enquiry <ArrowRight aria-hidden="true" />
-          </Link>
+          </a>
         </div>
       </section>
       <ContactSection />

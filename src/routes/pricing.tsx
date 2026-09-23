@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Check } from "lucide-react";
 import { ContactSection, InteriorHero } from "@/components/sections";
 import { Eyebrow } from "@/components/layout";
+import { scrollToContactForm } from "@/lib/scroll";
 import { priceTiers } from "@/lib/site";
 
 export const Route = createFileRoute("/pricing")({ component: PricingPage });
@@ -28,13 +29,27 @@ function PricingPage() {
               <strong>{tier.price}</strong>
               <p>{tier.detail}</p>
               {"quote" in tier && tier.quote ? (
-                <Link to="/contact" className="button button-dark">
+                <a
+                  href="#contact"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToContactForm();
+                  }}
+                  className="button button-dark"
+                >
                   Request a quote <ArrowRight aria-hidden="true" />
-                </Link>
+                </a>
               ) : (
-                <Link to="/contact" className="text-link">
+                <a
+                  href="#contact"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToContactForm();
+                  }}
+                  className="text-link"
+                >
                   Talk about this package <ArrowRight aria-hidden="true" />
-                </Link>
+                </a>
               )}
             </article>
           ))}

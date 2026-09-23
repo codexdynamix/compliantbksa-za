@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { ContactSection, FaqSection, InteriorHero } from "@/components/sections";
 import { Eyebrow } from "@/components/layout";
+import { scrollToContactForm } from "@/lib/scroll";
 
 export const Route = createFileRoute("/faq")({ component: FaqPage });
 
@@ -27,9 +28,16 @@ function FaqPage() {
               Bring the question. We'll bring the <em>context.</em>
             </h2>
           </div>
-          <Link to="/contact" className="button button-accent">
+          <a
+            href="#contact"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToContactForm();
+            }}
+            className="button button-accent"
+          >
             Start a conversation <ArrowRight aria-hidden="true" />
-          </Link>
+          </a>
         </div>
       </section>
       <ContactSection />

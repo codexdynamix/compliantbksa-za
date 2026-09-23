@@ -5,7 +5,6 @@ import {
   ArrowUpRight,
   BarChart3,
   Calculator,
-  Check,
   ChevronDown,
   Clock3,
   FileSpreadsheet,
@@ -18,6 +17,7 @@ import {
 import { useState } from "react";
 import { ContactForm } from "@/components/contact-form";
 import { Eyebrow, HeroDock } from "@/components/layout";
+import { scrollToContactForm } from "@/lib/scroll";
 import { faqs, services, SITE } from "@/lib/site";
 
 const serviceIcons = [Calculator, BarChart3, Landmark, FileSpreadsheet, FileSpreadsheet, TrendingUp, ShieldCheck, BarChart3, Landmark];
@@ -42,9 +42,16 @@ export function Hero() {
             <span>Supporting your growth.</span>
           </div>
           <div className="hero-actions animate-rise delay-3">
-            <Link to="/contact" className="button button-dark">
-              Request a conversation <ArrowRight aria-hidden="true" />
-            </Link>
+            <a
+              href="#contact"
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToContactForm();
+              }}
+              className="button button-dark"
+            >
+              Book now <ArrowRight aria-hidden="true" />
+            </a>
           </div>
           <div className="animate-rise delay-4">
             <HeroDock />
@@ -350,9 +357,16 @@ export function FitSection() {
               <strong>{item}</strong>
             </div>
           ))}
-          <Link to="/contact" className="text-link fit-link">
+          <a
+            href="#contact"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToContactForm();
+            }}
+            className="text-link fit-link"
+          >
             Let's see if we fit <ArrowRight aria-hidden="true" />
-          </Link>
+          </a>
         </div>
       </div>
     </section>
@@ -485,7 +499,7 @@ export function ContactSection() {
             </div>
           </div>
         </div>
-        <div className="form-panel" data-reveal>
+        <div className="form-panel" id="form-panel" data-reveal>
           <ContactForm />
         </div>
       </div>

@@ -116,9 +116,20 @@ em {
 [data-reveal] {
   opacity: 0;
   transform: translateY(16px);
-  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+  transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+  animation: reveal-fallback 0.01s ease 0.5s forwards;
 }
-[data-reveal].is-visible { opacity: 1; transform: none; }
+[data-reveal].is-visible {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+@keyframes reveal-fallback {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 
 /* Header — Apple-like frosted bar */
 .site-header {
@@ -157,9 +168,9 @@ em {
 }
 .wordmark-type small {
   margin-top: 3px;
-  opacity: 0.48;
-  font-size: 0.5rem;
-  font-weight: 500;
+  opacity: 0.76;
+  font-size: 0.5625rem;
+  font-weight: 550;
   letter-spacing: 0.16em;
 }
 .desktop-nav { display: flex; align-items: center; gap: 22px; }
@@ -270,7 +281,12 @@ em {
 .text-link:hover { color: var(--color-leaf); }
 .text-link svg { width: 16px; height: 16px; transition: transform 0.2s var(--ease-out); }
 .text-link:hover svg { transform: translateX(3px); }
-.text-link-light { color: color-mix(in oklab, var(--color-fg) 62%, transparent); }
+.text-link-light {
+  color: var(--color-gold);
+}
+.text-link-light:hover {
+  color: var(--color-cream);
+}
 
 /* Official iOS app icons */
 .ios-app-icon {
@@ -908,6 +924,13 @@ em {
   line-height: 1.7;
 }
 
+.contact-section,
+#contact,
+#consultation-form,
+.form-panel {
+  scroll-margin-top: 80px;
+}
+
 .contact-section {
   padding: 120px 0;
   background: var(--color-forest);
@@ -999,6 +1022,12 @@ em {
   box-shadow: inset 0 0 0 1.5px var(--color-leaf);
 }
 .form-submit { width: 100%; margin-top: 4px; }
+.form-submit:disabled { opacity: 0.75; cursor: not-allowed; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .privacy-note { margin: 0; color: var(--color-muted); font-size: 0.75rem; }
 .privacy-note a { color: var(--color-leaf); }
 .form-success {
@@ -1068,10 +1097,8 @@ em {
 }
 .next-steps p { margin: 0; font-size: 1.05rem; font-weight: 650; letter-spacing: -0.02em; }
 .next-steps a { color: var(--color-leaf); font-size: 0.875rem; font-weight: 600; text-decoration: none; }
-.not-found { min-height: 72dvh; padding: 190px 0 120px; }
-.not-found h1 { margin: 16px 0 0; font-size: clamp(3rem, 6vw, 5.4rem); letter-spacing: -0.045em; }
-.not-found p { color: var(--color-muted); }
-.not-found .button { margin-top: 24px; }
+.not-found { padding: 64px 0 120px; background: var(--color-bg); }
+.not-found .button { margin-top: 0; }
 
 .source-feature-section { padding: 112px 0; background: var(--color-bg); }
 .source-feature-grid { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 72px; }
@@ -1261,10 +1288,29 @@ em {
 .wa-preview-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+.wa-badge-icon {
+  display: block;
+  flex: none;
+  filter: drop-shadow(0 2px 6px rgba(37, 211, 102, 0.3));
 }
 .wa-preview-head strong { display: block; font-size: 0.875rem; letter-spacing: -0.02em; }
 .wa-preview-head span { display: block; color: var(--color-muted); font-size: 0.75rem; }
+.wa-status-text {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  margin-top: 1px;
+}
+.wa-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #25d366;
+  box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.25);
+}
 .wa-preview p {
   margin: 10px 0 12px;
   color: var(--color-muted);

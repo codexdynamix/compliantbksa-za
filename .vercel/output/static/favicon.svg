@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Compliant Bookkeeping SA">
-  <rect width="32" height="32" rx="7" fill="#FAF8F5"/>
-  <path d="M5.5 8.2 15 6.2v19.6L5.5 23.8V8.2Z" fill="#1E2528"/>
-  <path d="M17 6.2 26.5 8.2v15.6L17 25.8V6.2Z" fill="#5B6E63"/>
-  <rect x="15" y="6.2" width="2" height="19.6" fill="#E7C6B2"/>
+  <rect width="32" height="32" rx="8" fill="#1e2528"/>
+  <path d="M6.2 8.6 14.6 6.6v18.8L6.2 23.4V8.6Z" fill="#faf8f5"/>
+  <path d="M17.4 6.6 25.8 8.6v14.8l-8.4 2V6.6Z" fill="#5b6e63"/>
+  <rect x="14.6" y="6.6" width="2.8" height="18.8" rx="0.5" fill="#e7c6b2"/>
 </svg>
