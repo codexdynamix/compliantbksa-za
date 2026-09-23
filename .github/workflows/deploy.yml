@@ -1,4 +1,4 @@
-name: Deploy Meba Dental Clinic to Hostinger
+name: Deploy Compliant Bookkeeping SA to Hostinger
 
 on:
   push:
@@ -13,10 +13,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy website to Hostinger
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build static website for Hostinger
+        run: npm run build:hostinger
+
+      - name: Deploy website to Hostinger public_html
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.HOSTINGER_HOST }}
           username: ${{ secrets.HOSTINGER_USERNAME }}
           password: ${{ secrets.HOSTINGER_PASSWORD }}
-          server-dir: ./
+          local-dir: ./dist/
+          server-dir: ./public_html/
